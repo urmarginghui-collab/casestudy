@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CSC Case Study Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<style>
+:root{
+  --bg:#FAF6EF; --surface:#FFFFFF; --ink:#2B2620; --muted:#8A8073; --line:#ECE4D6;
+  --gold:#B8914A; --gold-soft:#F4EAD5; --ok:#4E9A6E; --ok-soft:#E3F1E8; --warn:#C7773A;
+  --radius:18px; --shadow:0 6px 24px rgba(80,60,30,.08);
+  font-family:"Plus Jakarta Sans","Noto Sans SC",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%}
+body{min-height:100vh;line-height:1.5}
+button,input,textarea{font:inherit;color:inherit}
+code{background:var(--gold-soft);padding:1px 6px;border-radius:6px}
+
+.top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:rgba(250,246,239,.9);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}
+.logo .dot{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,#D9B877,#B8914A);display:grid;place-items:center;color:#fff;font-size:16px}
+.logo small{display:block;font-weight:500;color:var(--muted);font-size:12px;letter-spacing:0}
+.top .sp{flex:1}
+.me{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 80px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.center{text-align:center}
+h1,h2,h3{margin:0 0 8px;line-height:1.25}
+.muted{color:var(--muted)}
+
+.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer;background:var(--ink);color:#fff;transition:transform .12s,opacity .2s;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.gold{background:var(--gold)}
+.btn.ok{background:var(--ok)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:8px 12px;font-size:13px;border-radius:10px}
+.btn.big{width:100%;padding:16px;font-size:17px}
+
+input[type=text],textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:14px;background:#fff;outline:none;font-size:16px;transition:border .2s}
+input[type=text]:focus,textarea:focus{border-color:var(--gold)}
+textarea{min-height:140px;resize:vertical}
+
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;background:var(--gold-soft);color:var(--gold)}
+.pill.live{background:var(--ok-soft);color:var(--ok)}
+.pill.live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ok);animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+/* join */
+.join{max-width:420px;margin:8vh auto 0}
+.join .emoji{font-size:54px;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+
+/* waiting */
+.waiting{max-width:520px;margin:6vh auto 0}
+.dots span{display:inline-block;width:10px;height:10px;margin:0 4px;border-radius:50%;background:var(--gold);animation:dot 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:13px;animation:pop .3s}
+.chip .av{width:24px;height:24px;font-size:10px}
+.chip.done{border-color:#BFE0CB;background:var(--ok-soft)}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+
+/* case */
+.case{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.shot{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:10px;box-shadow:var(--shadow)}
+.shot img{width:100%;display:block;border-radius:10px;cursor:zoom-in}
+.qbox{background:linear-gradient(135deg,#FFF8EA,#F4EAD5);border:1px solid #EBDDBE;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.qbox .lbl{font-size:12px;font-weight:800;letter-spacing:.8px;color:var(--gold);text-transform:uppercase}
+.qbox .q{font-size:18px;font-weight:700;margin-top:4px;white-space:pre-wrap}
+.done-box{text-align:center;padding:26px 16px}
+.done-box .big{font-size:46px}
+.mine{background:#FBF8F2;border:1px dashed var(--line);border-radius:12px;padding:12px;text-align:left;white-space:pre-wrap;margin:12px 0}
+
+/* board */
+.board-head{display:flex;align-items:center;gap:10px;margin:26px 0 14px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.acard{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);animation:rise .45s both;animation-delay:var(--d)}
+@keyframes rise{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.acard header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.acard header b{flex:1}
+.acard p{margin:0;white-space:pre-wrap;word-break:break-word;font-size:15px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;color:#3a3128;flex:none}
+.star{border:0;background:none;font-size:22px;cursor:pointer;color:var(--gold);padding:0 4px}
+.hl-wrap{margin-bottom:16px}
+.acard.hl{border:2px solid var(--gold);background:linear-gradient(180deg,#FFFDF7,#FFF6E3);box-shadow:0 10px 34px rgba(184,145,74,.25)}
+.acard.hl p{font-size:18px}
+.hl-tag{display:inline-block;font-size:12px;font-weight:800;color:var(--gold);background:var(--gold-soft);padding:3px 10px;border-radius:999px;margin-bottom:10px}
+.empty{color:var(--muted);text-align:center;padding:30px;border:1.5px dashed var(--line);border-radius:16px}
+
+/* admin */
+.admin{display:grid;grid-template-columns:320px minmax(0,1fr);gap:20px;align-items:start}
+.panel h3{font-size:15px;display:flex;align-items:center;gap:8px}
+.panel+.panel{margin-top:16px}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:18px;text-align:center;cursor:pointer;color:var(--muted);transition:.2s;background:#FCFAF6}
+.drop.over,.drop:hover{border-color:var(--gold);background:#FFF8EA}
+.drop img{max-width:100%;max-height:220px;border-radius:8px;display:block;margin:0 auto}
+.clist{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:420px;overflow:auto}
+.citem{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.citem.cur{border-color:var(--gold);background:#FFF8EA}
+.citem img{width:44px;height:44px;object-fit:cover;border-radius:8px;flex:none;background:#eee}
+.citem .t{flex:1;min-width:0;font-size:13px}
+.citem .t b{display:block}
+.citem .t span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.x{border:0;background:none;color:var(--muted);cursor:pointer;font-size:16px}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.steps{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}
+.steps span{font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#F1ECE3;color:var(--muted)}
+.steps span.on{background:var(--ink);color:#fff}
+.tracker{display:flex;flex-wrap:wrap;gap:8px}
+.big-count{font-size:30px;font-weight:800}
+.present .admin{grid-template-columns:1fr}
+.present .side,.present .hide-present{display:none}
+
+/* lightbox */
+.lb{position:fixed;inset:0;background:rgba(20,16,12,.85);display:none;place-items:center;z-index:50;padding:16px;cursor:zoom-out}
+.lb.show{display:grid}
+.lb img{max-width:100%;max-height:100%;border-radius:10px}
+
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;opacity:0;transition:.3s;z-index:60;font-size:14px;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:fall 2.8s ease-in forwards}
+@keyframes fall{to{top:105vh;transform:rotate(720deg) translateX(40px)}}
+
+@media (max-width:820px){
+  .case,.admin{grid-template-columns:1fr}
+  .wrap{padding:14px 12px 70px}
+  .top{padding:12px 14px}
+  .qbox .q{font-size:16px}
+  .grid{grid-template-columns:1fr}
+  .logo small{display:none}
+  .logo{font-size:15px;white-space:nowrap}
+  .me{font-size:13px;white-space:nowrap}
+}
+.zoomhint{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo"><div class="dot" id="logoIcon">💬</div><div id="logoText">CSC Case Study<small>Live training</small></div></div>
+  <div class="sp"></div>
+  <div class="me" id="me"></div>
+</div>
+<main class="wrap" id="app"><div class="center muted" style="margin-top:20vh">Loading…</div></main>
+<div class="lb" id="lb"><img alt=""></div>
+
+<script type="module">
+// Participants: open this page normally.  Host: add ?admin to the link.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, collection, onSnapshot, setDoc, updateDoc, addDoc, deleteDoc, getDocs, writeBatch, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+// ===== Firebase settings =====
+// Firebase connection settings for project "csc-casestudy"
+// (This is NOT a password — it's safe to be public. The Firestore rules protect the data.)
+const manualConfig = {
+  apiKey: "AIzaSyBG5jLafytnVJhhnIrsOxzdACg2U8X0zuw",
+  authDomain: "csc-casestudy.firebaseapp.com",
+  projectId: "csc-casestudy",
+  storageBucket: "csc-casestudy.firebasestorage.app",
+  messagingSenderId: "824518869336",
+  appId: "1:824518869336:web:ca95fb7dad421caace652d"
+};
+
+// Who can open the Admin page (must match firestore.rules)
+const ADMIN_EMAILS = ["ginghui222@gmail.com"];
+
+// ===== Shared helpers =====
+// ===== Shared Firebase setup for Case Study Live =====
+
+// On Firebase Hosting, the config is served automatically at /__/firebase/init.json.
+// If that is not available (e.g. testing elsewhere), fall back to firebase-config.js.
+async function loadConfig() {
+  if (manualConfig.apiKey && !manualConfig.apiKey.startsWith("PASTE")) return manualConfig;
+  try {
+    const r = await fetch("/__/firebase/init.json");
+    if (r.ok) return await r.json();
+  } catch (e) { /* ignore */ }
+  return manualConfig;
+}
+
+const config = await loadConfig();
+const configReady = !!(config && config.apiKey && !String(config.apiKey).startsWith("PASTE"));
+const app = configReady ? initializeApp(config) : null;
+const auth = configReady ? getAuth(app) : null;
+const db = configReady ? getFirestore(app) : null;
+
+// ---- small helpers ----
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function toast(msg) {
+  let t = $("#toast");
+  if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+const COLORS = ["#E8B4A0", "#B9D3C2", "#C9BEE0", "#F2D19B", "#A9CBE0", "#E6B8C8", "#C8D9A0", "#F0B9A0"];
+function colorFor(name) {
+  let h = 0; for (const c of String(name)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return COLORS[h % COLORS.length];
+}
+function initials(name) {
+  const n = String(name || "?").trim();
+  return n ? n.slice(0, 2).toUpperCase() : "?";
+}
+
+// Render answer cards (used by both admin and participants)
+function renderBoard(el, answers, highlightUid, opts = {}) {
+  if (!answers.length) { el.innerHTML = `<div class="empty">No answers yet</div>`; return; }
+  const sorted = [...answers].sort((a, b) => (a.at?.seconds || 0) - (b.at?.seconds || 0));
+  const hl = sorted.find(a => a.id === highlightUid);
+  const rest = sorted.filter(a => a.id !== highlightUid);
+  const card = (a, i, big) => `
+    <article class="acard ${big ? "hl" : ""}" style="--d:${i * 70}ms">
+      ${big ? `<div class="hl-tag">💬 Discussing now</div>` : ""}
+      <header>
+        <span class="av" style="background:${colorFor(a.name)}">${esc(initials(a.name))}</span>
+        <b>${esc(a.name)}</b>
+        ${opts.admin ? `<button class="star ${a.id === highlightUid ? "on" : ""}" data-uid="${a.id}" title="Highlight for discussion">${a.id === highlightUid ? "★" : "☆"}</button>` : ""}
+      </header>
+      <p>${esc(a.text)}</p>
+    </article>`;
+  el.innerHTML = (hl ? `<div class="hl-wrap">${card(hl, 0, true)}</div>` : "") +
+    `<div class="grid">${rest.map((a, i) => card(a, i + 1, false)).join("")}</div>`;
+}
+
+function confetti() {
+  const c = document.createElement("div"); c.className = "confetti";
+  const cols = ["#C9A45C", "#E8B4A0", "#B9D3C2", "#C9BEE0", "#F2D19B"];
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement("i");
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.background = cols[i % cols.length];
+    s.style.animationDelay = Math.random() * 0.6 + "s";
+    s.style.transform = `rotate(${Math.random() * 360}deg)`;
+    c.appendChild(s);
+  }
+  document.body.appendChild(c); setTimeout(() => c.remove(), 3500);
+}
+
+function setupNeeded(el) {
+  el.innerHTML = `<div class="card center"><h2>⚙️ Setup needed</h2>
+  <p>Firebase is not connected yet. Deploy with Firebase Hosting, or paste your config into <code>firebase-config.js</code>.</p></div>`;
+}
+
+const IS_ADMIN = new URLSearchParams(location.search).has("admin") || location.hash === "#admin";
+
+function runParticipant() {
+
+
+const app = $("#app");
+let uid = null;
+let myName = "";
+try { myName = localStorage.getItem("csName") || ""; } catch (e) {}
+
+let session = null, caseData = null, caseId = null;
+let players = [], submits = [], answers = [], myAnswer = null;
+let editing = false, lastStatus = null;
+let unsub = { case: null, subs: null, ans: null, mine: null };
+const off = k => { if (unsub[k]) { unsub[k](); unsub[k] = null; } };
+
+if (!configReady) setupNeeded(app);
+else onAuthStateChanged(auth, u => {
+  if (u) { uid = u.uid; if (myName) enter(); else showJoin(); }
+  else showJoin();
+});
+
+function showJoin() {
+  app.innerHTML = `
+  <div class="join card center">
+    <div class="emoji">👋</div>
+    <h1>Welcome!</h1>
+    <p class="muted">Enter your name to join today's case study</p>
+    <input type="text" id="nm" maxlength="30" placeholder="Your name" value="${esc(myName)}" autocomplete="off">
+    <div style="height:12px"></div>
+    <button class="btn gold big" id="go">Join session →</button>
+  </div>`;
+  const nm = $("#nm"), go = $("#go");
+  nm.focus();
+  const join = async () => {
+    const v = nm.value.trim();
+    if (!v) { toast("Please enter your name"); return; }
+    go.disabled = true; go.textContent = "Joining…";
+    myName = v; try { localStorage.setItem("csName", v); } catch (e) {}
+    try {
+      if (!auth.currentUser) await signInAnonymously(auth);
+      uid = auth.currentUser.uid;
+      enter();
+    } catch (e) { console.error(e); toast("Could not join: " + e.code); go.disabled = false; go.textContent = "Join session →"; }
+  };
+  go.onclick = join;
+  nm.onkeydown = e => { if (e.key === "Enter") join(); };
+}
+
+let entered = false;
+async function enter() {
+  $("#me").innerHTML = `<span class="av" style="background:${colorFor(myName)};width:28px;height:28px;font-size:11px">${esc(initials(myName))}</span>${esc(myName)} <button class="btn ghost sm" id="chg">Change</button>`;
+  $("#chg").onclick = () => { myName = ""; try { localStorage.removeItem("csName"); } catch (e) {} location.reload(); };
+  try { await setDoc(doc(db, "players", uid), { name: myName, at: serverTimestamp() }); } catch (e) { console.error(e); }
+  if (entered) return; entered = true;
+  onSnapshot(collection(db, "players"), s => { players = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, () => {});
+  onSnapshot(doc(db, "session", "current"), s => { session = s.exists() ? s.data() : null; onSession(); }, e => { console.error(e); render(); });
+}
+
+function onSession() {
+  const newCase = session?.caseId || null;
+  const visible = session && session.status !== "waiting";
+  if (newCase !== caseId || !visible) {
+    off("case"); off("subs"); off("ans"); off("mine");
+    caseId = newCase; caseData = null; submits = []; answers = []; myAnswer = null; editing = false;
+  }
+  if (caseId && visible) {
+    if (!unsub.case) unsub.case = onSnapshot(doc(db, "cases", caseId), s => { caseData = s.exists() ? s.data() : null; render(); }, () => { unsub.case = null; });
+    if (!unsub.subs) unsub.subs = onSnapshot(collection(db, "cases", caseId, "submits"), s => { submits = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, () => { unsub.subs = null; });
+    if (!unsub.mine) unsub.mine = onSnapshot(doc(db, "cases", caseId, "answers", uid), s => { myAnswer = s.exists() ? s.data() : null; render(); }, () => { unsub.mine = null; });
+  }
+  if (session?.status === "revealed" && caseId) {
+    if (!unsub.ans) unsub.ans = onSnapshot(collection(db, "cases", caseId, "answers"), s => { answers = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, () => { unsub.ans = null; });
+    if (lastStatus !== "revealed") confetti();
+  } else off("ans");
+  lastStatus = session?.status || null;
+  render();
+}
+
+function chips(list, doneIds) {
+  return `<div class="chips">${list.map(p => `<span class="chip ${doneIds && doneIds.has(p.id) ? "done" : ""}"><span class="av" style="background:${colorFor(p.name)}">${esc(initials(p.name))}</span>${esc(p.name)}${doneIds && doneIds.has(p.id) ? " ✓" : ""}</span>`).join("")}</div>`;
+}
+
+function render() {
+  if (!entered) return;
+  // keep what the person is typing
+  const ta = $("#ans"); const draft = ta ? ta.value : null;
+
+  if (!session || !caseId || session.status === "waiting") {
+    app.innerHTML = `
+    <div class="waiting card center">
+      <div style="font-size:46px">☕</div>
+      <h2>Hi ${esc(myName)}! You're in.</h2>
+      <p class="muted">Waiting for the host to show the next case…</p>
+      <div class="dots"><span></span><span></span><span></span></div>
+      <p class="muted" style="margin-top:18px;font-size:13px">${players.length} people joined</p>
+      ${chips(players)}
+    </div>`;
+    return;
+  }
+  if (!caseData) { app.innerHTML = `<div class="center muted" style="margin-top:20vh">Loading case…</div>`; return; }
+
+  // While someone is typing, don't rebuild the page (keeps keyboard + cursor)
+  const viewKey = [caseId, session.status, !!myAnswer, editing, !!caseData.image].join("|");
+  if (session.status === "open" && (!myAnswer || editing) && $("#ans") && render._key === viewKey) return;
+  render._key = viewKey;
+
+  const doneIds = new Set(submits.map(s => s.id));
+  const caseHead = `
+    <div class="case">
+      <div class="shot">${caseData.image ? `<img src="${caseData.image}" alt="Customer conversation" id="shot"><div class="zoomhint">🔍 Tap image to zoom</div>` : `<div class="empty">No screenshot</div>`}</div>
+      <div>
+        <div style="margin-bottom:10px"><span class="pill ${session.status === "open" ? "live" : ""}">Case ${esc(caseData.no || "")} · ${session.status === "open" ? "Answering" : "Answers revealed"}</span></div>
+        <div class="qbox"><div class="lbl">Question</div><div class="q">${esc(caseData.question || "If you were the CSC, how would you reply?")}</div></div>
+        <div id="side"></div>
+      </div>
+    </div>`;
+
+  app.innerHTML = caseHead + `<div id="boardArea"></div>`;
+  const side = $("#side");
+
+  if (session.status === "open") {
+    if (!myAnswer || editing) {
+      side.innerHTML = `
+        <div class="card">
+          <textarea id="ans" maxlength="1500" placeholder="Type your reply to the customer here…"></textarea>
+          <div style="height:12px"></div>
+          <button class="btn gold big" id="sub">${myAnswer ? "Update answer" : "Submit answer"} ✈️</button>
+          <p class="muted center" style="font-size:12px;margin:10px 0 0">Others can't see your answer until the host reveals it.</p>
+        </div>`;
+      const t = $("#ans");
+      t.value = draft ?? (myAnswer?.text || "");
+      $("#sub").onclick = submit;
+    } else {
+      side.innerHTML = `
+        <div class="card done-box">
+          <div class="big">🎉</div>
+          <h2>Submitted!</h2>
+          <p class="muted">Waiting for the host to reveal everyone's answers</p>
+          <div class="mine">${esc(myAnswer.text)}</div>
+          <button class="btn ghost sm" id="edit">✏️ Edit my answer</button>
+          <p class="muted" style="margin:16px 0 0;font-size:13px"><b>${submits.length}</b> / ${players.length} submitted</p>
+          ${chips(players, doneIds)}
+        </div>`;
+      $("#edit").onclick = () => { editing = true; render(); };
+    }
+  } else if (session.status === "revealed") {
+    side.innerHTML = myAnswer ? `<div class="card"><div class="muted" style="font-size:12px;font-weight:700">YOUR ANSWER</div><div class="mine" style="margin-bottom:0">${esc(myAnswer.text)}</div></div>` : `<div class="card muted center">You didn't submit for this case.</div>`;
+    $("#boardArea").innerHTML = `
+      <div class="board-head"><h2 style="margin:0">💡 Everyone's answers</h2><span class="pill">${answers.length} answers</span></div>
+      <div id="board"></div>`;
+    renderBoard($("#board"), answers, session.highlight || null);
+  }
+
+  const img = $("#shot");
+  if (img) img.onclick = () => { $("#lb img").src = img.src; $("#lb").classList.add("show"); };
+}
+
+async function submit() {
+  const text = $("#ans").value.trim();
+  if (!text) { toast("Please write your answer first"); return; }
+  const b = $("#sub"); b.disabled = true; b.textContent = "Sending…";
+  try {
+    const batch = writeBatch(db);
+    batch.set(doc(db, "cases", caseId, "answers", uid), { name: myName, text, at: serverTimestamp() });
+    batch.set(doc(db, "cases", caseId, "submits", uid), { name: myName, at: serverTimestamp() });
+    await batch.commit();
+    editing = false; toast("Answer submitted ✓");
+  } catch (e) {
+    console.error(e); toast("Could not submit — the host may have closed answers");
+    b.disabled = false; b.textContent = "Submit answer ✈️";
+  }
+}
+
+$("#lb").onclick = () => $("#lb").classList.remove("show");
+
+}
+
+function runAdmin() {
+  document.title = "Case Study Admin";
+  $("#logoIcon").textContent = "🎛️";
+  $("#logoText").innerHTML = "Case Study · Admin<small>Host controls</small>";
+
+
+const app = $("#app");
+const DEFAULT_Q = "If you were the CSC, how would you reply?";
+let session = null, cases = [], players = [], submits = [], answers = [];
+let curId = null, peek = false, newImg = null, started = false;
+let subUnsub = null, ansUnsub = null;
+
+if (!configReady) setupNeeded(app);
+else onAuthStateChanged(auth, u => {
+  if (!u || u.isAnonymous) return showLogin();
+  if (!ADMIN_EMAILS.map(e => e.toLowerCase()).includes((u.email || "").toLowerCase())) {
+    app.innerHTML = `<div class="join card center"><div style="font-size:46px">🔒</div><h2>Not an admin</h2>
+      <p class="muted">${esc(u.email)} doesn't have host access.</p><button class="btn ghost" id="so">Sign out</button></div>`;
+    $("#so").onclick = () => signOut(auth); return;
+  }
+  $("#me").innerHTML = `${esc(u.email)} <button class="btn ghost sm" id="so">Sign out</button>`;
+  $("#so").onclick = () => signOut(auth);
+  start();
+});
+
+function showLogin() {
+  $("#me").innerHTML = "";
+  app.innerHTML = `<div class="join card center"><div class="emoji">🎛️</div><h1>Host login</h1>
+    <p class="muted">Only the session host can open this page.</p>
+    <button class="btn gold big" id="gl">Sign in with Google</button></div>`;
+  $("#gl").onclick = async () => {
+    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+    catch (e) { toast("Sign-in failed: " + e.code); }
+  };
+}
+
+function start() {
+  if (started) { draw(); return; } started = true;
+  app.innerHTML = `
+  <div class="admin">
+    <aside class="side">
+      <section class="card panel">
+        <h3>➕ New case</h3>
+        <div class="drop" id="drop"><div id="dropInner">📷 Click, drag, or <b>Ctrl/Cmd + V</b><br>to add a screenshot</div></div>
+        <input type="file" id="file" accept="image/*" hidden>
+        <div style="height:10px"></div>
+        <textarea id="q" style="min-height:80px">${DEFAULT_Q}</textarea>
+        <div style="height:10px"></div>
+        <button class="btn gold big" id="add">Add case</button>
+      </section>
+      <section class="card panel">
+        <h3>📚 Cases <span class="muted" id="ccount" style="font-weight:500"></span></h3>
+        <div class="clist" id="clist"></div>
+      </section>
+      <section class="card panel">
+        <h3>👥 Joined <span class="muted" id="pcount" style="font-weight:500"></span></h3>
+        <div class="tracker" id="plist"></div>
+        <div style="height:10px"></div>
+        <button class="btn ghost sm" id="clearP">Clear joined list</button>
+      </section>
+    </aside>
+    <section id="main"></section>
+  </div>`;
+
+  // image input
+  const drop = $("#drop"), file = $("#file");
+  drop.onclick = () => file.click();
+  file.onchange = () => file.files[0] && takeImage(file.files[0]);
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); const f = e.dataTransfer.files[0]; f && takeImage(f); };
+  document.addEventListener("paste", e => {
+    const it = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith("image/"));
+    if (it) { e.preventDefault(); takeImage(it.getAsFile()); }
+  });
+  $("#add").onclick = addCase;
+  $("#clearP").onclick = clearPlayers;
+
+  onSnapshot(doc(db, "session", "current"), s => { session = s.exists() ? s.data() : null; watchCase(); draw(); }, e => toast("Error: " + e.code));
+  onSnapshot(query(collection(db, "cases"), orderBy("at")), s => { cases = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); });
+  onSnapshot(collection(db, "players"), s => { players = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); });
+}
+
+function watchCase() {
+  const id = session?.caseId || null;
+  if (id === curId) return;
+  curId = id; peek = false;
+  if (subUnsub) subUnsub(); if (ansUnsub) ansUnsub();
+  submits = []; answers = [];
+  if (!id) return;
+  subUnsub = onSnapshot(collection(db, "cases", id, "submits"), s => { submits = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); });
+  ansUnsub = onSnapshot(collection(db, "cases", id, "answers"), s => { answers = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); });
+}
+
+// ---- image: shrink so it fits in the database (keeps it under ~700KB) ----
+function takeImage(f) {
+  const r = new FileReader();
+  r.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      let w = Math.min(900, im.width), q = 0.8, out;
+      do {
+        const c = document.createElement("canvas");
+        c.width = w; c.height = Math.round(im.height * w / im.width);
+        const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height);
+        x.drawImage(im, 0, 0, c.width, c.height);
+        out = c.toDataURL("image/jpeg", q);
+        q -= 0.1; if (q < 0.45) { w = Math.round(w * 0.8); q = 0.7; }
+      } while (out.length > 700000 && w > 300);
+      newImg = out;
+      $("#dropInner").innerHTML = `<img src="${out}" alt=""><div style="font-size:12px;margin-top:6px">Click to change</div>`;
+    };
+    im.src = r.result;
+  };
+  r.readAsDataURL(f);
+}
+
+async function addCase() {
+  const question = $("#q").value.trim() || DEFAULT_Q;
+  if (!newImg) { toast("Add a screenshot first"); return; }
+  const b = $("#add"); b.disabled = true; b.textContent = "Saving…";
+  try {
+    const no = cases.reduce((m, c) => Math.max(m, c.no || 0), 0) + 1;
+    await addDoc(collection(db, "cases"), { no, question, image: newImg, at: serverTimestamp() });
+    newImg = null; $("#q").value = DEFAULT_Q;
+    $("#dropInner").innerHTML = `📷 Click, drag, or <b>Ctrl/Cmd + V</b><br>to add a screenshot`;
+    toast(`Case ${no} added ✓`);
+  } catch (e) { console.error(e); toast("Could not save: " + e.code); }
+  b.disabled = false; b.textContent = "Add case";
+}
+
+async function loadCase(id) {
+  await setDoc(doc(db, "session", "current"), { caseId: id, status: "waiting", highlight: null, at: serverTimestamp() });
+}
+const setStatus = s => updateDoc(doc(db, "session", "current"), { status: s, at: serverTimestamp() });
+
+async function removeCase(id) {
+  if (!confirm("Delete this case?")) return;
+  if (session?.caseId === id) await setDoc(doc(db, "session", "current"), { caseId: null, status: "waiting", highlight: null });
+  await deleteDoc(doc(db, "cases", id));
+}
+
+async function clearPlayers() {
+  if (!confirm("Clear the joined list? (People still on the page will re-appear when they refresh.)")) return;
+  const s = await getDocs(collection(db, "players"));
+  const b = writeBatch(db); s.forEach(d => b.delete(d.ref)); await b.commit();
+  toast("Cleared");
+}
+
+function draw() {
+  if (!$("#main")) return;
+  const cur = cases.find(c => c.id === session?.caseId);
+  const status = cur ? session.status : null;
+
+  // case list
+  $("#ccount").textContent = cases.length ? `(${cases.length})` : "";
+  $("#clist").innerHTML = cases.length ? cases.map(c => `
+    <div class="citem ${c.id === session?.caseId ? "cur" : ""}">
+      <img src="${c.image}" alt="">
+      <div class="t"><b>Case ${c.no}${c.id === session?.caseId ? " · current" : ""}</b><span>${esc(c.question)}</span></div>
+      ${c.id === session?.caseId ? "" : `<button class="btn ghost sm" data-load="${c.id}">Load</button>`}
+      <button class="x" data-del="${c.id}" title="Delete">✕</button>
+    </div>`).join("") : `<div class="muted" style="font-size:13px">No cases yet. Add one above.</div>`;
+  app.querySelectorAll("[data-load]").forEach(b => b.onclick = () => loadCase(b.dataset.load));
+  app.querySelectorAll("[data-del]").forEach(b => b.onclick = () => removeCase(b.dataset.del));
+
+  // players
+  const done = new Set(submits.map(s => s.id));
+  $("#pcount").textContent = `(${players.length})`;
+  $("#plist").innerHTML = players.map(p => `<span class="chip ${done.has(p.id) ? "done" : ""}"><span class="av" style="background:${colorFor(p.name)}">${esc(initials(p.name))}</span>${esc(p.name)}${done.has(p.id) ? " ✓" : ""}</span>`).join("") || `<span class="muted" style="font-size:13px">Nobody yet — share the link!</span>`;
+
+  const main = $("#main");
+  if (!cur) {
+    main.innerHTML = `<div class="card center" style="padding:40px 20px"><div style="font-size:46px">🎬</div>
+      <h2>Ready when you are</h2><p class="muted">Add a case on the left, then click <b>Load</b> to start.</p>
+      <p class="muted" style="font-size:13px">Participant link: <code>${esc(location.href.split("?")[0].split("#")[0])}</code></p></div>`;
+    return;
+  }
+
+  const idx = cases.findIndex(c => c.id === cur.id);
+  const next = cases[idx + 1];
+  const step = s => `<span class="${status === s ? "on" : ""}">${{ waiting: "1 · Hidden", open: "2 · Answering", revealed: "3 · Revealed" }[s]}</span>`;
+  let buttons = "";
+  if (status === "waiting") buttons = `<button class="btn ok" id="bShow">▶ Show case to everyone</button>`;
+  if (status === "open") buttons = `<button class="btn gold" id="bReveal">🔓 Reveal answers (${submits.length})</button><button class="btn ghost sm" id="bHide">Hide case</button>`;
+  if (status === "revealed") buttons = next
+    ? `<button class="btn ok" id="bNext">⏭ Next case (Case ${next.no})</button><button class="btn ghost sm" id="bReopen">Re-open answering</button>`
+    : `<span class="pill">🏁 Last case</span><button class="btn ghost sm" id="bReopen">Re-open answering</button><button class="btn ghost sm" id="bEnd">End session</button>`;
+
+  main.innerHTML = `
+    <div class="card">
+      <div class="ctrl">
+        <h2 style="margin:0;flex:1">Case ${cur.no}</h2>
+        <button class="btn ghost sm" id="bPresent">${document.body.classList.contains("present") ? "⬅ Show controls" : "🖥 Present mode"}</button>
+      </div>
+      <div class="steps">${step("waiting")}${step("open")}${step("revealed")}</div>
+      <div class="ctrl" style="margin-top:12px">${buttons}</div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="case">
+      <div class="shot"><img src="${cur.image}" id="shot" alt=""></div>
+      <div>
+        <div class="qbox"><div class="lbl">Question</div><div class="q">${esc(cur.question)}</div></div>
+        <div class="card center">
+          <div class="muted" style="font-size:13px;font-weight:700">SUBMITTED</div>
+          <div class="big-count">${submits.length} <span class="muted" style="font-size:18px">/ ${players.length}</span></div>
+          <div class="chips">${players.map(p => `<span class="chip ${done.has(p.id) ? "done" : ""}"><span class="av" style="background:${colorFor(p.name)}">${esc(initials(p.name))}</span>${esc(p.name)}${done.has(p.id) ? " ✓" : ""}</span>`).join("")}</div>
+        </div>
+      </div>
+    </div>
+    <div class="board-head">
+      <h2 style="margin:0">💡 Answer board</h2>
+      <span class="pill">${answers.length} answers</span>
+      ${status === "revealed" ? `<span class="muted hide-present" style="font-size:13px">Tap ☆ to highlight an answer for discussion</span>` : ""}
+      ${status !== "revealed" && answers.length ? `<button class="btn ghost sm hide-present" id="bPeek">${peek ? "🙈 Hide preview" : "👀 Preview (only you)"}</button>` : ""}
+    </div>
+    <div id="board"></div>`;
+
+  if (status === "revealed" || peek) {
+    renderBoard($("#board"), answers, session.highlight || null, { admin: status === "revealed" });
+    $("#board").querySelectorAll(".star").forEach(s => s.onclick = () =>
+      updateDoc(doc(db, "session", "current"), { highlight: session.highlight === s.dataset.uid ? null : s.dataset.uid }));
+  } else {
+    $("#board").innerHTML = `<div class="empty">🔒 Answers stay hidden until you click <b>Reveal answers</b></div>`;
+  }
+
+  const on = (id, fn) => { const el = $("#" + id); if (el) el.onclick = fn; };
+  on("bShow", () => setStatus("open"));
+  on("bHide", () => setStatus("waiting"));
+  on("bReveal", () => { setStatus("revealed"); confetti(); });
+  on("bReopen", () => updateDoc(doc(db, "session", "current"), { status: "open", highlight: null }));
+  on("bNext", () => loadCase(next.id));
+  on("bEnd", () => setDoc(doc(db, "session", "current"), { caseId: null, status: "waiting", highlight: null }));
+  on("bPeek", () => { peek = !peek; draw(); });
+  on("bPresent", () => { document.body.classList.toggle("present"); draw(); });
+  const img = $("#shot"); if (img) img.onclick = () => { $("#lb img").src = img.src; $("#lb").classList.add("show"); };
+}
+
+$("#lb").onclick = () => $("#lb").classList.remove("show");
+
+}
+
+if (IS_ADMIN) runAdmin(); else runParticipant();
+</script>
+</body>
+</html>
