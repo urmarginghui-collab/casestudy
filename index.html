@@ -328,9 +328,13 @@ function onSession() {
     if (!unsub.subs) unsub.subs = onSnapshot(collection(db, "cases", caseId, "submits"), s => { submits = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, () => { unsub.subs = null; });
     if (!unsub.mine) unsub.mine = onSnapshot(doc(db, "cases", caseId, "answers", uid), s => { myAnswer = s.exists() ? s.data() : null; render(); }, () => { unsub.mine = null; });
   }
-  if (session?.status === "revealed" && caseId) {
-    if (!unsub.ans) unsub.ans = onSnapshot(collection(db, "cases", caseId, "answers"), s => { answers = s.docs.map(d => ({ id: d.id, ...d.data() })); render(); }, () => { unsub.ans = null; });
-    if (lastStatus !== "revealed") confetti();
+  if (caseId && visible) {
+    if (!unsub.ans) unsub.ans = onSnapshot(collection(db, "cases", caseId, "answers"), s => {
+      const before = answers.length;
+      answers = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (answers.length > before && before > 0) toast("💬 New answer posted");
+      render();
+    }, () => { unsub.ans = null; });
   } else off("ans");
   lastStatus = session?.status || null;
   render();
@@ -361,7 +365,7 @@ function render() {
 
   // While someone is typing, don't rebuild the page (keeps keyboard + cursor)
   const viewKey = [caseId, session.status, !!myAnswer, editing, !!caseData.image].join("|");
-  if (session.status === "open" && (!myAnswer || editing) && $("#ans") && render._key === viewKey) return;
+  if (session.status === "open" && (!myAnswer || editing) && $("#ans") && render._key === viewKey) { drawBoard(); return; }
   render._key = viewKey;
 
   const doneIds = new Set(submits.map(s => s.id));
@@ -369,7 +373,7 @@ function render() {
     <div class="case">
       <div class="shot">${caseData.image ? `<img src="${caseData.image}" alt="Customer conversation" id="shot"><div class="zoomhint">🔍 Tap image to zoom</div>` : `<div class="empty">No screenshot</div>`}</div>
       <div>
-        <div style="margin-bottom:10px"><span class="pill ${session.status === "open" ? "live" : ""}">Case ${esc(caseData.no || "")} · ${session.status === "open" ? "Answering" : "Answers revealed"}</span></div>
+        <div style="margin-bottom:10px"><span class="pill live">Case ${esc(caseData.no || "")} · Live</span></div>
         <div class="qbox"><div class="lbl">Question</div><div class="q">${esc(caseData.question || "If you were the CSC, how would you reply?")}</div></div>
         <div id="side"></div>
       </div>
@@ -385,7 +389,7 @@ function render() {
           <textarea id="ans" maxlength="1500" placeholder="Type your reply to the customer here…"></textarea>
           <div style="height:12px"></div>
           <button class="btn gold big" id="sub">${myAnswer ? "Update answer" : "Submit answer"} ✈️</button>
-          <p class="muted center" style="font-size:12px;margin:10px 0 0">Others can't see your answer until the host reveals it.</p>
+          <p class="muted center" style="font-size:12px;margin:10px 0 0">Everyone will see your answer on the board below 👇</p>
         </div>`;
       const t = $("#ans");
       t.value = draft ?? (myAnswer?.text || "");
@@ -395,7 +399,7 @@ function render() {
         <div class="card done-box">
           <div class="big">🎉</div>
           <h2>Submitted!</h2>
-          <p class="muted">Waiting for the host to reveal everyone's answers</p>
+          <p class="muted">Your answer is on the board below 👇</p>
           <div class="mine">${esc(myAnswer.text)}</div>
           <button class="btn ghost sm" id="edit">✏️ Edit my answer</button>
           <p class="muted" style="margin:16px 0 0;font-size:13px"><b>${submits.length}</b> / ${players.length} submitted</p>
@@ -403,16 +407,21 @@ function render() {
         </div>`;
       $("#edit").onclick = () => { editing = true; render(); };
     }
-  } else if (session.status === "revealed") {
+  } else {
     side.innerHTML = myAnswer ? `<div class="card"><div class="muted" style="font-size:12px;font-weight:700">YOUR ANSWER</div><div class="mine" style="margin-bottom:0">${esc(myAnswer.text)}</div></div>` : `<div class="card muted center">You didn't submit for this case.</div>`;
-    $("#boardArea").innerHTML = `
-      <div class="board-head"><h2 style="margin:0">💡 Everyone's answers</h2><span class="pill">${answers.length} answers</span></div>
-      <div id="board"></div>`;
-    renderBoard($("#board"), answers, session.highlight || null);
   }
+  drawBoard();
 
   const img = $("#shot");
   if (img) img.onclick = () => { $("#lb img").src = img.src; $("#lb").classList.add("show"); };
+}
+
+function drawBoard() {
+  const area = $("#boardArea"); if (!area) return;
+  area.innerHTML = `
+    <div class="board-head"><h2 style="margin:0">💡 Everyone's answers</h2><span class="pill">${answers.length} answers</span></div>
+    <div id="board"></div>`;
+  renderBoard($("#board"), answers, session?.highlight || null);
 }
 
 async function submit() {
@@ -568,7 +577,7 @@ async function addCase() {
 }
 
 async function loadCase(id) {
-  await setDoc(doc(db, "session", "current"), { caseId: id, status: "waiting", highlight: null, at: serverTimestamp() }).catch(fail);
+  await setDoc(doc(db, "session", "current"), { caseId: id, status: "open", highlight: null, at: serverTimestamp() }).then(() => toast("✅ Case shown to everyone")).catch(fail);
 }
 const fail = e => { console.error(e); toast("❌ Error: " + (e.code || e.message)); };
 const setStatus = s => updateDoc(doc(db, "session", "current"), { status: s, at: serverTimestamp() })
@@ -619,13 +628,10 @@ function draw() {
 
   const idx = cases.findIndex(c => c.id === cur.id);
   const next = cases[idx + 1];
-  const step = s => `<span class="${status === s ? "on" : ""}">${{ waiting: "1 · Hidden", open: "2 · Answering", revealed: "3 · Revealed" }[s]}</span>`;
-  let buttons = "";
-  if (status === "waiting") buttons = `<button class="btn ok" id="bShow">▶ Show case to everyone</button>`;
-  if (status === "open") buttons = `<button class="btn gold" id="bReveal">🔓 Reveal answers (${submits.length})</button><button class="btn ghost sm" id="bHide">Hide case</button>`;
-  if (status === "revealed") buttons = next
-    ? `<button class="btn ok" id="bNext">⏭ Next case (Case ${next.no})</button><button class="btn ghost sm" id="bReopen">Re-open answering</button>`
-    : `<span class="pill">🏁 Last case</span><button class="btn ghost sm" id="bReopen">Re-open answering</button><button class="btn ghost sm" id="bEnd">End session</button>`;
+  let buttons = status === "waiting"
+    ? `<button class="btn ok" id="bShow">▶ Show case to everyone</button>`
+    : next ? `<button class="btn ok" id="bNext">⏭ Next case (Case ${next.no})</button>`
+           : `<span class="pill">🏁 Last case</span><button class="btn ghost sm" id="bEnd">End session</button>`;
 
   main.innerHTML = `
     <div class="card">
@@ -633,7 +639,6 @@ function draw() {
         <h2 style="margin:0;flex:1">Case ${cur.no}</h2>
         <button class="btn ghost sm" id="bPresent">${document.body.classList.contains("present") ? "⬅ Show controls" : "🖥 Present mode"}</button>
       </div>
-      <div class="steps">${step("waiting")}${step("open")}${step("revealed")}</div>
       <div class="ctrl" style="margin-top:12px">${buttons}</div>
     </div>
     <div style="height:16px"></div>
@@ -651,17 +656,14 @@ function draw() {
     <div class="board-head">
       <h2 style="margin:0">💡 Answer board</h2>
       <span class="pill">${answers.length} answers</span>
-      ${status === "revealed" ? `<span class="muted hide-present" style="font-size:13px">Tap ☆ to highlight an answer for discussion</span>` : ""}
-      ${status !== "revealed" && answers.length ? `<button class="btn ghost sm hide-present" id="bPeek">${peek ? "🙈 Hide preview" : "👀 Preview (only you)"}</button>` : ""}
+      <span class="muted hide-present" style="font-size:13px">Tap ☆ to highlight an answer for discussion</span>
     </div>
     <div id="board"></div>`;
 
-  if (status === "revealed" || peek) {
-    renderBoard($("#board"), answers, session.highlight || null, { admin: status === "revealed" });
+  {
+    renderBoard($("#board"), answers, session.highlight || null, { admin: true });
     $("#board").querySelectorAll(".star").forEach(s => s.onclick = () =>
       updateDoc(doc(db, "session", "current"), { highlight: session.highlight === s.dataset.uid ? null : s.dataset.uid }).catch(fail));
-  } else {
-    $("#board").innerHTML = `<div class="empty">🔒 Answers stay hidden until you click <b>Reveal answers</b></div>`;
   }
 
   const on = (id, fn) => { const el = $("#" + id); if (el) el.onclick = fn; };
