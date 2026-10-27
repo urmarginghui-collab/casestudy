@@ -150,6 +150,7 @@ textarea{min-height:140px;resize:vertical}
   <div class="logo"><div class="dot" id="logoIcon">💬</div><div id="logoText">CSC Case Study<small>Live training</small></div></div>
   <div class="sp"></div>
   <div class="me" id="me"></div>
+  <a class="btn ghost sm" id="hostLink" href="?admin" style="margin-left:8px;text-decoration:none">🎛️ Admin</a>
 </div>
 <main class="wrap" id="app"><div class="center muted" style="margin-top:20vh">Loading…</div></main>
 <div class="lb" id="lb"><img alt=""></div>
@@ -434,6 +435,7 @@ $("#lb").onclick = () => $("#lb").classList.remove("show");
 }
 
 function runAdmin() {
+  $("#hostLink").href = location.pathname; $("#hostLink").textContent = "👥 Participant view";
   document.title = "Case Study Admin";
   $("#logoIcon").textContent = "🎛️";
   $("#logoText").innerHTML = "Case Study · Admin<small>Host controls</small>";
