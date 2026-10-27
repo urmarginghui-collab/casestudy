@@ -140,6 +140,7 @@ textarea{min-height:140px;resize:vertical}
   .logo{font-size:15px;white-space:nowrap}
   .me{font-size:13px;white-space:nowrap}
 }
+@media (max-width:820px){#hostLink{padding:6px 8px;font-size:0}#hostLink::before{content:"🎛️";font-size:16px}.me .btn{padding:6px 8px}}
 .zoomhint{font-size:12px;color:var(--muted);text-align:center;margin-top:6px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -567,9 +568,11 @@ async function addCase() {
 }
 
 async function loadCase(id) {
-  await setDoc(doc(db, "session", "current"), { caseId: id, status: "waiting", highlight: null, at: serverTimestamp() });
+  await setDoc(doc(db, "session", "current"), { caseId: id, status: "waiting", highlight: null, at: serverTimestamp() }).catch(fail);
 }
-const setStatus = s => updateDoc(doc(db, "session", "current"), { status: s, at: serverTimestamp() });
+const fail = e => { console.error(e); toast("❌ Error: " + (e.code || e.message)); };
+const setStatus = s => updateDoc(doc(db, "session", "current"), { status: s, at: serverTimestamp() })
+    .then(() => toast(s === "revealed" ? "✅ Answers revealed to everyone" : s === "open" ? "✅ Case shown to everyone" : "✅ Case hidden")).catch(fail);
 
 async function removeCase(id) {
   if (!confirm("Delete this case?")) return;
@@ -656,7 +659,7 @@ function draw() {
   if (status === "revealed" || peek) {
     renderBoard($("#board"), answers, session.highlight || null, { admin: status === "revealed" });
     $("#board").querySelectorAll(".star").forEach(s => s.onclick = () =>
-      updateDoc(doc(db, "session", "current"), { highlight: session.highlight === s.dataset.uid ? null : s.dataset.uid }));
+      updateDoc(doc(db, "session", "current"), { highlight: session.highlight === s.dataset.uid ? null : s.dataset.uid }).catch(fail));
   } else {
     $("#board").innerHTML = `<div class="empty">🔒 Answers stay hidden until you click <b>Reveal answers</b></div>`;
   }
